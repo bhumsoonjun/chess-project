@@ -42,10 +42,9 @@ class analyser:
         new_move = move["Move"]
         centipawn = move["Centipawn"]
         mate = move["Mate"]
-        eval = centipawn / 100
 
         if centipawn is not None:
-            mapped_state = self.get_belonged_state(eval)
+            mapped_state = self.get_belonged_state(centipawn / 100)
             return new_move, mapped_state
         else:
             if mate is not None:

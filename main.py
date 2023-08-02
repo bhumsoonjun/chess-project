@@ -12,7 +12,7 @@ def write_res_to_file(path: str, res: Dict):
         file.write(res.__str__())
 
 if __name__ == '__main__':
-    fen = "r1bqkb1r/p2n1p2/2p1pn2/1p2P1B1/2pP4/2N3P1/PP3P1P/R2QKB1R b KQkq - 0 11"
+    fen = "8/8/2K5/6Q1/4k3/3r4/8/8 w - - 1 44"
     path = "output"
 
     states = [(-float("inf"), -20), (-20, -10), (-10, -5), (-5, -3), (-3, -1), (-1, -0.5), (-0.5, 0.5), (0.5, 1), (1, 3), (3, 5), (5, 10), (10, 20), (20, float("inf"))]
