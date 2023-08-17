@@ -12,24 +12,26 @@ def write_res_to_file(path: str, res: Dict):
         file.write(res.__str__())
 
 if __name__ == '__main__':
-    fen = "8/8/2K5/6Q1/4k3/3r4/8/8 w - - 1 44"
+    fen = "2b5/pp3kp1/r3q1n1/4p2Q/3RB3/BP5P/P1P2PP1/7K b - - 0 27"
     path = "output"
 
     states = [(-float("inf"), -20), (-20, -10), (-10, -5), (-5, -3), (-3, -1), (-1, -0.5), (-0.5, 0.5), (0.5, 1), (1, 3), (3, 5), (5, 10), (10, 20), (20, float("inf"))]
-    num_variations = 5
+    states_including_end_points = [-1] + states + [1]
+    num_variations = 3
     depth = 5
-    stockfish_depth = 15
+    stockfish_depth = 20
     config = load_config("stockfish_confg.json")
 
     model = analyser(states, num_variations, depth, stockfish_depth, config)
-    graph, adj, stoch, res_df = model.calculate_best_move(fen)
+    adj, stoch, dist, expectation = model.eval_position(fen)
 
-    for i in range(len(graph)):
-        write_res_to_file(f"{path}/test/graph_{i}.json", graph[i])
-        write_res_to_file(f"{path}/test/adj_{i}.json", adj[i])
-        write_res_to_file(f"{path}/test/stoch_{i}.json", stoch[i])
+    print(expectation)
 
-    res_df.to_csv(f"{path}/test/df_all.csv")
+    write_res_to_file(f"{path}/test/adj_", adj)
+    write_res_to_file(f"{path}/test/stoch_", pd.DataFrame(stoch, columns=states_including_end_points, index=states_including_end_points))
+    write_res_to_file(f"{path}/test/expectation_", expectation)
+    write_res_to_file(f"{path}/test/dist_.", dist)
+
 
 
 
