@@ -1,6 +1,7 @@
 
 import json
-from analyser import *
+from analyser_base import *
+
 def load_config(path: str) -> dict:
     with open(path) as file:
         raw_json_string = file.read()
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     stockfish_depth = 20
     config = load_config("stockfish_confg.json")
 
-    model = analyser(states, num_variations, depth, stockfish_depth, config)
+    model = analyser_base(states, num_variations, depth, stockfish_depth, config)
     adj, stoch, dist, expectation = model.eval_position(fen)
 
     print(expectation)
