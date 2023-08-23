@@ -17,8 +17,8 @@ class analyser(ABC):
             stockfish_depth: int = 20,
             stockfish_config: Dict = None
     ):
-        self.states: List[Tuple[int, int]] = states
-        self.states_as_string: List[str] = list(map(lambda x: f"{x}", states))
+        self.states: List[Tuple[int, int]] = [-1] + states + [1]
+        self.states_as_string: List[str] = ["-1"] + list(map(lambda x: f"{x}", states)) + ["1"]
         self.analysis_depth: int = analysis_depth
         self.stockfish_depth = stockfish_depth
         self.num_variations: int = num_variations
@@ -40,7 +40,7 @@ class analyser(ABC):
             )
 
     def get_belonged_state(self, evaluation: float):
-        for i in range(len(self.states)):
+        for i in range(1, len(self.states) - 1):
             state = self.states[i]
             if state[0] <= evaluation <= state[1]:
                 return self.states_as_string[i]
@@ -64,10 +64,12 @@ class analyser(ABC):
                 return Exception("Mate and Centipawn is none")
 
     def build_adjacency_matrix(self, graph: weighted_directed_graph) -> np.ndarray:
-        num_states = len(self.states_as_string) + 2
-        all_states = ["-1"] + self.states_as_string + ["1"]
+        num_states = len(self.states_as_string)
+        all_states = self.states_as_string
         state_to_index_mapping = dict()
         matrix = np.zeros(shape=(num_states, num_states))
+
+        print(graph.weights)
 
         for i, state_name in enumerate(all_states):
             state_to_index_mapping[state_name] = i

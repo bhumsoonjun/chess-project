@@ -88,7 +88,7 @@ class analyser_base(analyser):
             graphs.append(graph)
 
         num_states = len(self.states_as_string) + 2
-        all_states = ["-1"] + self.states_as_string + ["1"]
+        all_states = self.states_as_string
         state_to_index_mapping = dict()
         res_matrix = np.zeros(shape=(self.num_variations, num_states))
 
@@ -114,7 +114,7 @@ class analyser_base(analyser):
         adjacency_matrix = self.build_adjacency_matrix(graph)
         stochastic_matrix = self.build_stochastic_matrix(adjacency_matrix)
 
-        all_states = ["-1"] + self.states_as_string + ["1"]
+        all_states = self.states_as_string
         state_to_index_mapping = dict()
 
         for i, state_name in enumerate(all_states):
@@ -125,9 +125,8 @@ class analyser_base(analyser):
         init_dist = n_step_transition[state_to_index_mapping[initial_eval_state]]
         expectation = 0
 
-        print(init_dist)
-        for i in range(1, len(self.states) - 1):
+        for i in range(2, len(self.states) - 2):
             X = (self.states[i][0] + self.states[i][1]) / 2
-            expectation += X * init_dist[1:-1][i]
+            expectation += X * init_dist[i]
 
         return adjacency_matrix, stochastic_matrix, init_dist, expectation

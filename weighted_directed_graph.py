@@ -25,6 +25,7 @@ class weighted_directed_graph:
             self.graph[u] = set()
             self.graph[u].add(v)
 
+
     def get_node_degree(self, u: str):
         return len(self.graph[u])
 

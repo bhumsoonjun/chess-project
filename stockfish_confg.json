@@ -2,15 +2,15 @@
     "Debug Log File": "",
     "Contempt": 0,
     "Min Split Depth": 0,
-    "Threads": 12,
+    "Threads": 8,
     "Ponder": "true",
-    "Hash": 8192,
+    "Hash": 1024,
     "MultiPV": 1,
-    "Skill Level": 15,
+    "Skill Level": 20,
     "Move Overhead": 100,
-    "Minimum Thinking Time": 200,
+    "Minimum Thinking Time": 0,
     "Slow Mover": 100,
     "UCI_Chess960": "false",
-    "UCI_LimitStrength": "false",
-    "UCI_Elo": 3500
+    "UCI_LimitStrength": "true",
+    "UCI_Elo": 3100
 }

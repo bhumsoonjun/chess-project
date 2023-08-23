@@ -1,6 +1,8 @@
 
 import json
 from analyser_base import *
+from analyser_sampler import analyser_sampler
+
 
 def load_config(path: str) -> dict:
     with open(path) as file:
@@ -13,25 +15,35 @@ def write_res_to_file(path: str, res: Dict):
         file.write(res.__str__())
 
 if __name__ == '__main__':
-    fen = "2b5/pp3kp1/r3q1n1/4p2Q/3RB3/BP5P/P1P2PP1/7K b - - 0 27"
+    fen = "1r2qb1k/1p4r1/pP1P1nn1/2BBp2p/2N1Pp2/5P2/6Pp/R2Q1R1K b - - 3 30"
     path = "output"
 
     states = [(-float("inf"), -20), (-20, -10), (-10, -5), (-5, -3), (-3, -1), (-1, -0.5), (-0.5, 0.5), (0.5, 1), (1, 3), (3, 5), (5, 10), (10, 20), (20, float("inf"))]
-    states_including_end_points = [-1] + states + [1]
     num_variations = 3
-    depth = 5
+    depth = 4
     stockfish_depth = 20
     config = load_config("stockfish_confg.json")
 
-    model = analyser_base(states, num_variations, depth, stockfish_depth, config)
+    model = analyser_sampler(
+        states,
+        white_elo=2400,
+        black_elo=2700,
+        sampling_amount=5,
+        num_variations=num_variations,
+        white_depth=20,
+        black_depth=20,
+        analysis_depth=depth,
+        stockfish_depth=stockfish_depth,
+        stockfish_config=config
+    )
     adj, stoch, dist, expectation = model.eval_position(fen)
 
     print(expectation)
 
-    write_res_to_file(f"{path}/test/adj_", adj)
-    write_res_to_file(f"{path}/test/stoch_", pd.DataFrame(stoch, columns=states_including_end_points, index=states_including_end_points))
-    write_res_to_file(f"{path}/test/expectation_", expectation)
-    write_res_to_file(f"{path}/test/dist_.", dist)
+    write_res_to_file(f"{path}/test1/adj_", adj)
+    write_res_to_file(f"{path}/test1/stoch_", pd.DataFrame(stoch, columns=model.states, index=model.states))
+    write_res_to_file(f"{path}/test1/expectation_", expectation)
+    write_res_to_file(f"{path}/test1/dist_", dist)
 
 
 
