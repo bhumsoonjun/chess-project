@@ -2,6 +2,7 @@
 import json
 from analyser_base import *
 from analyser_sampler import analyser_sampler
+import pandas as pd
 
 
 def load_config(path: str) -> dict:
@@ -15,7 +16,7 @@ def write_res_to_file(path: str, res: Dict):
         file.write(res.__str__())
 
 if __name__ == '__main__':
-    fen = "5r1r/pb1nk1b1/2pNp1Qp/1p1nP1p1/2pq2B1/6B1/PP3PPP/R4RK1 b - - 1 18"
+    fen = "8/8/4kpp1/3p1b2/p6P/2B5/6P1/6K1 b - - 2 47"
     path = "output"
 
     states = [(-float("inf"), -20), (-20, -10), (-10, -5), (-5, -3), (-3, -1), (-1, -0.5), (-0.5, 0.5), (0.5, 1), (1, 3), (3, 5), (5, 10), (10, 20), (20, float("inf"))]
@@ -39,7 +40,7 @@ if __name__ == '__main__':
 
     print(df.to_markdown)
     write_res_to_file(f"{path}/test1/adj_", adj)
-    df.to_csv(f"{path}/test1/stoch_")
+    write_res_to_file(f"{path}/test1/stoch_", pd.DataFrame(stoch, columns=model.states, index=model.states))
     write_res_to_file(f"{path}/test1/expectation_", expectation)
     write_res_to_file(f"{path}/test1/dist_", dist)
 

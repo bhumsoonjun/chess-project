@@ -1,6 +1,6 @@
 from recursive.analyser_recursive import analyser_recursive
 
-fen = "5b1k/1p1n4/1P1P4/p3p2q/2B1Pp1n/R4PrP/5R1K/4BQ2 b - - 0 39"
+fen = "2kr3r/Qpp1n1p1/2b2pp1/4b3/8/6N1/PPP2P2/R1B2RK1 b - - 0 24"
 stockfish_conf = {
     "Debug Log File": "",
     "Contempt": 0,
@@ -22,7 +22,8 @@ analyser = analyser_recursive(
     depth=4,
     stockfish_depth=15,
     num_variation=3,
-    stockfish_config=stockfish_conf
+    stockfish_config=stockfish_conf,
+    nnue="false"
 )
 
 print(analyser.evaluate(fen))
