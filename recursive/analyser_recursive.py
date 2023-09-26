@@ -16,23 +16,23 @@ class analyser_recursive:
         self.nnue = nnue
         self.depth = depth
         self.num_variation = num_variation
-        self.stockfish = self.get_stockfish_for_platform(stockfish_config=stockfish_config)
+        self.stockfish = self.get_stockfish_for_platform(stockfish_config=stockfish_config, nnue=nnue)
 
 
-    def get_stockfish_for_platform(self, stockfish_config: Dict) -> Stockfish:
+    def get_stockfish_for_platform(self, stockfish_config: Dict, nnue) -> Stockfish:
         platform_system = platform.system()
         if platform_system == "Windows" or platform_system == "Java":
             return Stockfish(
                 path="../stockfish/stockfish-windows-x86-64-avx2.exe",
                 depth=self.stockfish_depth,
                 parameters=stockfish_config,
-                nnue="true"
+                nnue=nnue
             )
         else:
             return Stockfish(
                 depth=self.stockfish_depth,
                 parameters=stockfish_config,
-                nnue="true"
+                nnue=nnue
             )
 
     def get_eval(self, move: Dict):
