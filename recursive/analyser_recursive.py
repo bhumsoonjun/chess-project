@@ -79,8 +79,8 @@ class analyser_recursive:
             move = self.stockfish.get_top_moves(1)[0]
             self.stockfish.make_moves_from_current_position([move["Move"]])
             new_fen = self.stockfish.get_fen_position()
-            eval = self.get_eval(move)
-            node = tree_node(eval, new_fen, [])
+            evaluation = self.get_eval(move)
+            node = tree_node(evaluation, new_fen, [])
             parent.add_child(node)
             temp_set.add((new_fen, node))
             return;
@@ -89,8 +89,8 @@ class analyser_recursive:
             move = self.stockfish.get_top_moves(1)[0]
             self.stockfish.make_moves_from_current_position([move["Move"]])
             new_fen = self.stockfish.get_fen_position()
-            eval = self.get_eval(move)
-            node = tree_node(eval, new_fen, [])
+            evaluation = self.get_eval(move)
+            node = tree_node(evaluation, new_fen, [])
             parent.add_child(node)
             temp_set.add((new_fen, node))
             return;
