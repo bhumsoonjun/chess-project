@@ -83,7 +83,7 @@ class analyser_recursive:
             node = tree_node(evaluation, new_fen, [])
             parent.add_child(node)
             temp_set.add((new_fen, node))
-            return;
+            return temp_set;
         elif not self.is_white_move(fen) and np.random.uniform() < self.p_black_play_best:
             self.stockfish.set_fen_position(fen)
             move = self.stockfish.get_top_moves(1)[0]
@@ -93,7 +93,7 @@ class analyser_recursive:
             node = tree_node(evaluation, new_fen, [])
             parent.add_child(node)
             temp_set.add((new_fen, node))
-            return;
+            return temp_set;
 
         top_moves = self.stockfish.get_top_moves(2 + self.num_variation)
         top_moves_from_fen = np.random.choice(top_moves, size=min(self.num_variation, len(top_moves)), replace=False)
@@ -129,23 +129,11 @@ class analyser_recursive:
 
             for fen, parent in frontier:
                 print(f"depth: {depth_counter}, evaluating fen: {fen}, size: {processing_counter}/{len(frontier)}")
-                self.stockfish.set_fen_position(fen)
-                top_moves = self.stockfish.get_top_moves(2 + self.num_variation)
-                top_moves_from_fen = np.random.choice(top_moves, size=min(self.num_variation, len(top_moves)), replace=False)
-
-                for move in top_moves_from_fen:
-                    self.stockfish.set_fen_position(fen)
-                    self.stockfish.make_moves_from_current_position([move["Move"]])
-                    new_fen = self.stockfish.get_fen_position()
-                    evaluation = self.get_eval(move)
-                    weight = self.get_move_weight(fen, move)
-                    weighted_eval = evaluation * weight
-                    node = tree_node(weighted_eval, new_fen, [])
-                    new_frontiers.add((new_fen, node))
-                    parent.add_child(node)
-
+                temp_set = self.get_next_move(fen, parent)
+                new_frontiers.update(temp_set)
                 processing_counter += 1
 
+                print(len(new_frontiers))
             depth_counter += 1
             frontier = new_frontiers
 

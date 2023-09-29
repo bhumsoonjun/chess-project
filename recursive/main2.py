@@ -23,7 +23,9 @@ analyser = analyser_recursive(
     stockfish_depth=15,
     num_variation=3,
     stockfish_config=stockfish_conf,
-    nnue="false"
+    p_black_plat_best=0,
+    p_white_play_best=0,
+    nnue="true"
 )
 
 print(analyser.evaluate(fen))
