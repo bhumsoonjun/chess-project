@@ -1,6 +1,8 @@
 from recursive.analyser_recursive import analyser_recursive
+from recursive.analyser_recursive_look_ahead import analyser_recursive_look_ahead
+import numpy as np
 
-fen = "2kr3r/Qpp1n1p1/2b2pp1/4b3/8/6N1/PPP2P2/R1B2RK1 b - - 0 24"
+fen = "3r2rk/1p1nqpp1/2p1pn1p/p7/P2PPP2/2NQ1BR1/1P3P1P/6RK w - - 5 21"
 stockfish_conf = {
     "Debug Log File": "",
     "Contempt": 0,
@@ -18,6 +20,8 @@ stockfish_conf = {
     "UCI_Elo": 3500
 }
 
+np.random.seed(1)
+
 analyser = analyser_recursive(
     depth=4,
     stockfish_depth=15,
@@ -28,4 +32,24 @@ analyser = analyser_recursive(
     nnue="true"
 )
 
-print(analyser.evaluate(fen))
+np.random.seed(1)
+
+analyser_1 = analyser_recursive_look_ahead(
+    depth=10,
+    stockfish_depth=20,
+    num_variation=3,
+    stockfish_config=stockfish_conf,
+    white_skill_level=15,
+    black_skill_level=15,
+    nnue="true"
+)
+
+res_1 = analyser_1.evaluate(fen)
+
+print(f"res 1: {res_1}")
+
+print(res_1)
+
+# res = analyser.evaluate(fen)
+#
+# print(res)
