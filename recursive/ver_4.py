@@ -12,7 +12,7 @@ from stockfish.models import Capture
 from recursive.tree import tree, tree_node
 
 
-class analyzer_recursive_depth_std:
+class analyzer_recursive_depth_pruned:
 
     def __init__(
             self,
@@ -164,20 +164,21 @@ class analyzer_recursive_depth_std:
         std = np.std(evals)
         return std
 
-    def prune_moves(self, moves: List[Dict]):
+    def prune_moves(self, moves: List[Dict], std_scaler: float):
         std = self.calculate_moves_std(moves)
         evals = [self.get_eval(move)/100 for move in moves]
-        if std < 1:
+        if std < 0.1:
             return moves
         else:
             new_moves = [moves[0]]
             for i in range(1, len(moves)):
                 print(f"std: {std}, evals: {evals} {abs(evals[0] - evals[i])}")
-                if abs(evals[0] - evals[i]) <= 2 * std:
+                if abs(evals[0] - evals[i]) <= std_scaler * std:
                     new_moves.append(moves[i])
                 else:
                     break
             return new_moves
+
 
 
     def get_next_move(self, fen: str, parent: tree_node) -> Set[Tuple[str, tree_node]]:
@@ -218,21 +219,14 @@ class analyzer_recursive_depth_std:
             return temp_set
 
         top_moves_at_depth = top_moves_as_dict[self.stockfish_depth]
-        top_moves_at_depth = top_moves_at_depth[:min(self.num_variation, len(top_moves_at_depth))]
-        top_moves_pruned = self.prune_moves(top_moves_at_depth)
+        top_moves_pruned = self.prune_moves(top_moves_at_depth, 1.645)
+        best_moves_group = self.prune_moves(top_moves_at_depth, 1)
 
-        print(f"DICT: {top_moves_at_depth}")
+        print(f"DICT: {(self.num_variation, len(top_moves_pruned))} {top_moves_pruned}")
         print(f"top_moves_pruned: {len(top_moves_pruned)} {top_moves_pruned}")
-
-        weights_all = []
+        print(f"best_moves_group: {best_moves_group}")
         weights_pruned = []
-
-        for rank, move in enumerate(top_moves_at_depth):
-            self.stockfish.set_fen_position(fen)
-            weight = self.get_move_weight(top_moves_as_dict, move["Move"], rank) \
-                     + self.get_move_capture_weight(fen, move["Move"]) \
-                     + self.get_move_check_weight(fen, move["Move"])
-            weights_all.append(weight)
+        weights_best_moves = []
 
         for rank, move in enumerate(top_moves_pruned):
             self.stockfish.set_fen_position(fen)
@@ -241,22 +235,30 @@ class analyzer_recursive_depth_std:
                      + self.get_move_check_weight(fen, move["Move"])
             weights_pruned.append(weight)
 
-        print(f"weights_all: {weights_all}")
+        for rank, move in enumerate(best_moves_group):
+            self.stockfish.set_fen_position(fen)
+            weight = self.get_move_weight(top_moves_as_dict, move["Move"], rank) \
+                     + self.get_move_capture_weight(fen, move["Move"]) \
+                     + self.get_move_check_weight(fen, move["Move"])
+            weights_best_moves.append(weight)
+
+
+
         print(f"weights_pruned: {weights_pruned}")
 
-        total_weight_all = np.sum(weights_all)
         total_weight_pruned = np.sum(weights_pruned)
-        play_pruned_moves_prob = total_weight_pruned / total_weight_all
+        total_weight_best_moves = np.sum(weights_best_moves)
+        play_best_move_prob = total_weight_best_moves / total_weight_pruned
 
-        print(f"play_pruned_moves_prob: {total_weight_pruned} {total_weight_all} {play_pruned_moves_prob}")
+        print(f"play_best_move_prob: {total_weight_pruned} {total_weight_best_moves} {play_best_move_prob}")
 
-        if np.random.uniform() < play_pruned_moves_prob:
-            prune_weights_cumsum = np.cumsum(weights_pruned)
-            rand_int = np.random.uniform(0, prune_weights_cumsum[-1])
+        if np.random.uniform() < play_best_move_prob and len(top_moves_pruned) != len(best_moves_group):
+            prune_weights_cumsum = np.cumsum(weights_best_moves)
+            rand_int = np.random.uniform(0, weights_best_moves[-1])
             print(f"rand_int: {rand_int} {prune_weights_cumsum[-1]}")
-            for i in range(len(prune_weights_cumsum)):
-                if rand_int < prune_weights_cumsum[i]:
-                    print(f"ACCEPTED PRUNED MOVE: {top_moves_pruned[i]} {fen}")
+            for i in range(len(weights_best_moves)):
+                if rand_int < weights_best_moves[i]:
+                    print(f"ACCEPTED BEST MOVE: {top_moves_pruned[i]} {fen}")
                     move = top_moves_pruned[i]
                     self.stockfish.set_fen_position(fen)
                     self.stockfish.make_moves_from_current_position([move["Move"]])
@@ -269,9 +271,9 @@ class analyzer_recursive_depth_std:
                     return temp_set
 
 
-        scaler_weights = np.array(weights_all) / np.sum(weights_all)
+        scaler_weights = np.array(weights_pruned) / total_weight_pruned
 
-        for move, scaler in zip(top_moves_at_depth, scaler_weights):
+        for move, scaler in zip(top_moves_pruned, scaler_weights):
             self.stockfish.set_fen_position(fen)
             self.stockfish.make_moves_from_current_position([move["Move"]])
             new_fen = self.stockfish.get_fen_position()
