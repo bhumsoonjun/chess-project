@@ -5,7 +5,7 @@ from recursive.analyzer_recursive_depth_std import analyzer_recursive_depth_std
 from recursive.ver_4 import analyzer_recursive_depth_pruned
 import numpy as np
 
-fen = "1r1q1r1k/p1p1ppb1/b4np1/2pP3p/2P4B/2NB3P/PP1Q1PP1/2KR3R w - - 1 16"
+fen = "1r2qb1k/1p4r1/pP1P1nn1/2BBp3/2N1Pp1p/5P2/6Pp/R2Q1R1K w - - 0 31"
 stockfish_conf = {
     "Debug Log File": "",
     "Contempt": 0,
