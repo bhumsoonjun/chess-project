@@ -17,6 +17,10 @@ import re
 class StockfishException(Exception):
     pass
 
+class Capture(Enum):
+    DIRECT_CAPTURE = "direct capture"
+    EN_PASSANT = "en passant"
+    NO_CAPTURE = "no capture"
 
 class Stockfish:
     """Integrates the Stockfish chess engine with Python."""
@@ -585,6 +589,70 @@ class Stockfish:
             self._parameters.update({"MultiPV": old_MultiPV_value})
         return top_moves
 
+    def get_top_moves_lines(self, num_top_moves: int) -> List[dict]:
+        """Returns info on the top moves in the position.
+
+                Args:
+                    num_top_moves:
+                        The number of moves to return info on, assuming there are at least
+                        those many legal moves.
+
+                Returns:
+                    A list of dictionaries. In each dictionary, there are keys for Move, Centipawn, and Mate;
+                    the corresponding value for either the Centipawn or Mate key will be None.
+                    If there are no moves in the position, an empty list is returned.
+                """
+
+        if num_top_moves <= 0:
+            raise ValueError("num_top_moves is not a positive number.")
+        old_MultiPV_value = self._parameters["MultiPV"]
+        if num_top_moves != self._parameters["MultiPV"]:
+            self._set_option("MultiPV", num_top_moves)
+            self._parameters.update({"MultiPV": num_top_moves})
+        self._go()
+        lines = []
+        while True:
+            text = self._read_line()
+            splitted_text = text.split(" ")
+            lines.append(splitted_text)
+            if splitted_text[0] == "bestmove":
+                break
+        top_moves: List[dict] = []
+        multiplier = 1 if ("w" in self.get_fen_position()) else -1
+        for current_line in lines:
+            if (
+                    ("multipv" in current_line)
+                    and ("depth" in current_line)
+            ):
+                multiPV_number = int(current_line[current_line.index("multipv") + 1])
+                if multiPV_number <= num_top_moves:
+                    has_centipawn_value = "cp" in current_line
+                    has_mate_value = "mate" in current_line
+                    if has_centipawn_value == has_mate_value:
+                        raise RuntimeError(
+                            "Having a centipawn value and mate value should be mutually exclusive."
+                        )
+                    top_moves.append(
+                        {
+                            "Move": current_line[current_line.index("pv") + 1],
+                            "Depth": int(current_line[current_line.index("depth") + 1]),
+                            "Centipawn": int(current_line[current_line.index("cp") + 1])
+                                         * multiplier
+                            if has_centipawn_value
+                            else None,
+                            "Mate": int(current_line[current_line.index("mate") + 1])
+                                    * multiplier
+                            if has_mate_value
+                            else None,
+                            "PV": current_line[current_line.index("pv") + 1:],
+                        },
+                    )
+        if old_MultiPV_value != self._parameters["MultiPV"]:
+            self._set_option("MultiPV", old_MultiPV_value)
+            self._parameters.update({"MultiPV": old_MultiPV_value})
+
+        return top_moves
+
     def get_top_moves_with_pv(self, num_top_moves: int = 5) -> List[dict]:
         """Returns info on the top moves in the position.
 
@@ -754,11 +822,6 @@ class Stockfish:
         else:
             return Stockfish.Piece(piece_as_char)
 
-    class Capture(Enum):
-        DIRECT_CAPTURE = "direct capture"
-        EN_PASSANT = "en passant"
-        NO_CAPTURE = "no capture"
-
     def will_move_be_a_capture(self, move_value: str) -> Capture:
         """Returns whether the proposed move will be a direct capture,
            en passant, or not a capture at all.
@@ -779,7 +842,7 @@ class Stockfish:
         ending_square_piece = self.get_what_is_on_square(move_value[2:4])
         if ending_square_piece != None:
             if self._parameters["UCI_Chess960"] == "false":
-                return Stockfish.Capture.DIRECT_CAPTURE
+                return Capture.DIRECT_CAPTURE
             else:
                 # Check for Chess960 castling:
                 castling_pieces = [
@@ -787,18 +850,18 @@ class Stockfish:
                     [Stockfish.Piece.BLACK_KING, Stockfish.Piece.BLACK_ROOK],
                 ]
                 if [starting_square_piece, ending_square_piece] in castling_pieces:
-                    return Stockfish.Capture.NO_CAPTURE
+                    return Capture.NO_CAPTURE
                 else:
-                    return Stockfish.Capture.DIRECT_CAPTURE
+                    return Capture.DIRECT_CAPTURE
         elif move_value[2:4] == self.get_fen_position().split()[
             3
         ] and starting_square_piece in [
             Stockfish.Piece.WHITE_PAWN,
             Stockfish.Piece.BLACK_PAWN,
         ]:
-            return Stockfish.Capture.EN_PASSANT
+            return Capture.EN_PASSANT
         else:
-            return Stockfish.Capture.NO_CAPTURE
+            return Capture.NO_CAPTURE
 
     def get_stockfish_major_version(self):
         """Returns Stockfish engine major version.
